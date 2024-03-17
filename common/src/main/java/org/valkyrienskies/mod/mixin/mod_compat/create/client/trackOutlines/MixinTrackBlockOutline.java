@@ -39,21 +39,16 @@ public class MixinTrackBlockOutline {
     @Unique
     private static Vec3 valkyrienskies$angles;
 
-    @Inject(method = "drawCurveSelection",
-        at = @At(value = "INVOKE",
-            target = "Lcom/simibubi/create/content/trains/track/TrackBlockOutline$BezierPointSelection;angles()Lnet/minecraft/world/phys/Vec3;"),
-        locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "drawCurveSelection", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/trains/track/TrackBlockOutline$BezierPointSelection;angles()Lnet/minecraft/world/phys/Vec3;"), locals = LocalCapture.CAPTURE_FAILHARD)
     private static void harvestDrawCurveSelection(final PoseStack ms, final MultiBufferSource buffer, final Vec3 camera,
-        final CallbackInfo ci, final Minecraft mc,
-        final BezierPointSelection result, final VertexConsumer vb, final Vec3 vec) {
+            final CallbackInfo ci, final Minecraft mc,
+            final BezierPointSelection result, final VertexConsumer vb, final Vec3 vec) {
         valkyrienskies$cameraVec3 = camera;
         valkyrienskies$vec = result.vec();
         valkyrienskies$angles = result.angles();
     }
-    @ModifyArg(method = "drawCurveSelection",
-        at = @At(value = "INVOKE",
-            target = "Lcom/simibubi/create/content/trains/track/TrackBlockOutline;renderShape(Lnet/minecraft/world/phys/shapes/VoxelShape;Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Ljava/lang/Boolean;)V"),
-        index = 1)
+
+    @ModifyArg(method = "drawCurveSelection", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/trains/track/TrackBlockOutline;renderShape(Lnet/minecraft/world/phys/shapes/VoxelShape;Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Ljava/lang/Boolean;)V"), index = 1)
     private static PoseStack redirectTransformStackTranslate(final PoseStack ms) {
 
         final Level level = Minecraft.getInstance().level;
@@ -68,15 +63,15 @@ public class MixinTrackBlockOutline {
                 ship.getRenderTransform().getShipToWorldRotation().mul(rotation, rotation);
 
                 final Vector3d worldVec = ship.getRenderTransform().getShipToWorld()
-                    .transformPosition(
-                        new Vector3d(valkyrienskies$vec.x, valkyrienskies$vec.y + .125, valkyrienskies$vec.z),
-                        new Vector3d());
+                        .transformPosition(
+                                new Vector3d(valkyrienskies$vec.x, valkyrienskies$vec.y + .125, valkyrienskies$vec.z),
+                                new Vector3d());
 
                 ms.popPose();
                 ms.pushPose();
                 ms.translate(worldVec.x - valkyrienskies$cameraVec3.x,
-                    worldVec.y - valkyrienskies$cameraVec3.y,
-                    worldVec.z - valkyrienskies$cameraVec3.z);
+                        worldVec.y - valkyrienskies$cameraVec3.y,
+                        worldVec.z - valkyrienskies$cameraVec3.z);
                 ms.mulPose(VectorConversionsMCKt.toFloat(rotation));
                 ms.translate(-.5, -.125f, -.5);
             }
@@ -89,41 +84,47 @@ public class MixinTrackBlockOutline {
     @Unique
     private static BlockHitResult valkyrienskies$hitResult;
 
-    @ModifyArg(method = "drawCustomBlockSelection", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/level/border/WorldBorder;isWithinBounds(Lnet/minecraft/core/BlockPos;)Z"))
+    @ModifyArg(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/border/WorldBorder;isWithinBounds(Lnet/minecraft/core/BlockPos;)Z"))
     private static BlockPos modIsWithinBounds(final BlockPos blockPos) {
         final Level level = Minecraft.getInstance().level;
         if (level != null) {
             final Ship ship;
             if ((ship = VSGameUtilsKt.getShipManagingPos(level, blockPos)) != null) {
                 return BlockPos.containing(VectorConversionsMCKt.toMinecraft(ship.getShipToWorld()
-                    .transformPosition(VectorConversionsMCKt.toJOMLD(blockPos))));
+                        .transformPosition(VectorConversionsMCKt.toJOMLD(blockPos))));
             }
         }
         return blockPos;
     }
 
-    @Inject(method = "drawCustomBlockSelection",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
-    private static void harvest(final LevelRenderer context, final Camera info, final HitResult hitResult,
-        final float partialTicks,
-        final PoseStack ms, final MultiBufferSource buffers, final CallbackInfoReturnable<Boolean> cir) {
-        valkyrienskies$info = info;
-        valkyrienskies$hitResult = (BlockHitResult) hitResult;
-    }
+    // removed
+    // @Inject(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
+    // private static void harvest(final LevelRenderer context, final Camera info, final HitResult hitResult,
+    //         final float partialTicks,
+    //         final PoseStack ms, final MultiBufferSource buffers, final CallbackInfoReturnable<Boolean> cir) {
+    //     valkyrienskies$info = info;
+    //     valkyrienskies$hitResult = (BlockHitResult) hitResult;
+    // }
 
-    @Redirect(method = "drawCustomBlockSelection",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
+    // expected
+    // (Lnet/minecraftforge/client/event/RenderHighlightEvent$Block;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)
+    // @Inject(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
+    // private static void harvest(final RenderHighlightEvent.Block hitResult, final CallbackInfo ci) {
+    //     valkyrienskies$info = null;
+    //     valkyrienskies$hitResult = null;
+    // }
+
+    @Redirect(method = "drawCustomBlockSelection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
     private static void redirectTranslate(final PoseStack instance, final double d, final double e, final double f) {
         final Level level = Minecraft.getInstance().level;
         if (level != null) {
             final ShipObjectClient ship;
             if ((ship = (ShipObjectClient) VSGameUtilsKt.getShipManagingPos(level,
-                valkyrienskies$hitResult.getBlockPos())) != null) {
+                    valkyrienskies$hitResult.getBlockPos())) != null) {
                 final Vec3 camPos = valkyrienskies$info.getPosition();
                 VSClientGameUtils.transformRenderWithShip(ship.getRenderTransform(), instance,
-                    valkyrienskies$hitResult.getBlockPos(),
-                    camPos.x, camPos.y, camPos.z);
+                        valkyrienskies$hitResult.getBlockPos(),
+                        camPos.x, camPos.y, camPos.z);
             } else {
                 instance.translate(d, e, f);
             }
